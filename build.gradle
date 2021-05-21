@@ -3,7 +3,11 @@ buildscript {
         mavenCentral()
         maven {
             name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net"
+        }
+        maven {
+            name = "a Russian forum post told me to use this to find the missing files"
+            url = "https://repo.spongepowered.org/repository/forge-proxy/"
         }
         maven {
             name = "sonatype"

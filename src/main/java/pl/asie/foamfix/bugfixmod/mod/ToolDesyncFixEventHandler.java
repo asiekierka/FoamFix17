@@ -42,14 +42,16 @@ public class ToolDesyncFixEventHandler {
         }
     }
 
+    public boolean isValid() {
+        return syncItemMth != null;
+    }
+
     @SubscribeEvent
     public void blockBreak(BlockEvent.BreakEvent evt) {
-        if (syncItemMth != null) {
-            try {
-                syncItemMth.invoke(Minecraft.getMinecraft().playerController);
-            } catch (Exception ex) {
-                BugfixModClassTransformer.instance.logger.warn("ToolDesyncFix failed to resync");
-            }
+        try {
+            syncItemMth.invoke(Minecraft.getMinecraft().playerController);
+        } catch (Exception ex) {
+            BugfixModClassTransformer.instance.logger.warn("ToolDesyncFix failed to resync");
         }
     }
 }

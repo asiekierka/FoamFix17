@@ -65,8 +65,12 @@ public class FoamFixMod {
         if (evt.getSide() == Side.CLIENT) {
             if (BugfixModClassTransformer.instance.settings.ToolDesyncFixEnabled) {
                 ToolDesyncFixEventHandler handler = new ToolDesyncFixEventHandler();
-                FMLCommonHandler.instance().bus().register(handler);
-                MinecraftForge.EVENT_BUS.register(handler);
+                if (handler.isValid()) {
+                    FMLCommonHandler.instance().bus().register(handler);
+                    MinecraftForge.EVENT_BUS.register(handler);
+                } else {
+                    logger.error("Could not initialize ToolDesyncFixEventHandler!");
+                }
             }
         }
 
