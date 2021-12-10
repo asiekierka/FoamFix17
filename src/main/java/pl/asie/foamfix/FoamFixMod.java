@@ -38,6 +38,7 @@ import pl.asie.foamfix.bugfixmod.mod.ToolDesyncFixEventHandler;
 import pl.asie.foamfix.bugfixmod.mod.ArrowDingTweakEventHandler;
 import pl.asie.foamfix.ghostbuster.CommandGhostBuster;
 import pl.asie.foamfix.ghostbuster.GhostBusterLogger;
+import pl.asie.foamfix.repack.com.unascribed.ears.Ears;
 
 import java.net.URLClassLoader;
 import java.util.Arrays;
@@ -70,6 +71,18 @@ public class FoamFixMod {
                     MinecraftForge.EVENT_BUS.register(handler);
                 } else {
                     logger.error("Could not initialize ToolDesyncFixEventHandler!");
+                }
+            }
+
+            if (BugfixModClassTransformer.instance.settings.helloMmcg) {
+                try {
+                    Class c = Class.forName("pl.asie.foamfix.repack.com.unascribed.ears.Ears");
+                    Object o = c.newInstance();
+                    c.getMethod("onPreInit", FMLPreInitializationEvent.class)
+                            .invoke(o, evt);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    // pass
                 }
             }
         }

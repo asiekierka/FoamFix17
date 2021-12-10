@@ -1,0 +1,4 @@
+Additions:
+
+* Log4j formatting exploit mitigation.
+* Minecraft 1.8+ skin support!

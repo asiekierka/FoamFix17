@@ -84,10 +84,6 @@ public abstract class AbstractPatcher {
     }
 
     public byte[] patch(String transformedName, byte[] bytes) {
-        if (!targetClassName.equals(transformedName)) {
-            return bytes;
-        }
-
         ClassNode classNode = new ClassNode();
         ClassReader classReader = null;
         try {
@@ -102,12 +98,12 @@ public abstract class AbstractPatcher {
         patchClassNode(classNode);
 
         if (!successful) {
-            printMessage("Failed to apply transform!");
+            if (!targetClassName.isEmpty()) printMessage("Failed to apply transform!");
             return bytes;
         } else {
             ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             classNode.accept(writer);
-            printMessage(successful ? "Applied transform!" : "Failed to apply transform!");
+            if (!targetClassName.isEmpty()) printMessage(successful ? "Applied transform!" : "Failed to apply transform!");
             return writer.toByteArray();
         }
     }

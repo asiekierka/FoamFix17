@@ -40,6 +40,7 @@ import pl.asie.foamfix.bugfixmod.coremod.patchers.ItemHopperBounceFixPatcher;
 import pl.asie.foamfix.bugfixmod.coremod.patchers.ItemStairBounceFixPatcher;
 import pl.asie.foamfix.bugfixmod.coremod.patchers.VillageAnvilTweakPatcher;
 import pl.asie.foamfix.forkage.coremod.patchers.*;
+import pl.asie.foamfix.repack.com.unascribed.ears.common.agent.EarsAgent;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ public class BugfixModClassTransformer implements IClassTransformer {
     public File settingsFile;
     private boolean hasInit = false;
     public BugfixModSettings settings;
+    private ArrayList<AbstractPatcher> globalPatchers = new ArrayList<>();
     private Map<String, ArrayList<AbstractPatcher>> patchers;
     public Logger logger = LogManager.getLogger("foamfix");
 
@@ -140,6 +142,14 @@ public class BugfixModClassTransformer implements IClassTransformer {
                     "Fix client-side desynchronization of damaged tools related to Unbreaking enchantments. (from BugfixMod by williewillus)"
                     ).getBoolean(true);
 
+            settings.bfLog4JExploitFixEnabled = config.get("bugfixes", "log4jExploitFix", true,
+                    "Fix Log4j formatting exploit."
+                    ).getBoolean(true);
+
+            settings.mc18SkinSupport = config.get("tweaks", "mc18SkinSupport", true,
+                    "Add support for Minecraft 1.8+ skins."
+                    ).getBoolean(true);
+
             if (!Arrays.asList(new File(new File(settingsFile.getParent()).getParent()).list()).contains("saves")) {
                 logger.info("You probably are on a dedicated server. Disabling client fixes");
                 settings.BoatDesyncFixEnabled = false;
@@ -151,17 +161,45 @@ public class BugfixModClassTransformer implements IClassTransformer {
             MappingRegistry.init(isObf);
             setupPatchers();
             hasInit = true;
+
+            if (settings.mc18SkinSupport) {
+                try {
+                    Class c = Class.forName("com.unascribed.ears.Ears");
+                    settings.helloMmcg = false;
+                } catch (Throwable t) {
+                    settings.helloMmcg = true;
+                }
+            } else {
+                settings.helloMmcg = false;
+            }
+
+            if (settings.helloMmcg) {
+                try {
+                    Class c = Class.forName("api.player.render.RenderPlayerAPI");
+                    settings.helloMmcg = false;
+                } catch (Throwable t) {
+                    // pass
+                }
+            }
         }
     }
 
 
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (hasInit) {
+            List<AbstractPatcher> gpl = globalPatchers;
+            for (AbstractPatcher p : gpl) {
+                bytes = p.patch(transformedName, bytes);
+            }
             List<AbstractPatcher> pl = patchers.get(transformedName);
             if (pl != null) {
                 for (AbstractPatcher p : pl) {
                     bytes = p.patch(transformedName, bytes);
                 }
+            }
+
+            if (settings.helloMmcg) {
+                bytes = EarsAgent.transform(transformedName, bytes);
             }
         }
         return bytes;
@@ -356,12 +394,21 @@ public class BugfixModClassTransformer implements IClassTransformer {
                         "net/minecraft/client/renderer/Tessellator"
                 ));
             }
+
+            if (settings.bfLog4JExploitFixEnabled) {
+                addPatcher(new Log4JLoggerWrapperPatcher("Log4JExploitFix"));
+            }
         }
     }
 
     private void addPatcher(AbstractPatcher patcher) {
-        ArrayList<AbstractPatcher> list = patchers.computeIfAbsent(patcher.getTargetClassName(), k -> new ArrayList<>());
-        list.add(patcher);
-        list.trimToSize();
+        if (patcher.getTargetClassName() == null || patcher.getTargetClassName().isEmpty()) {
+            globalPatchers.add(patcher);
+            globalPatchers.trimToSize();
+        } else {
+            ArrayList<AbstractPatcher> list = patchers.computeIfAbsent(patcher.getTargetClassName(), k -> new ArrayList<>());
+            list.add(patcher);
+            list.trimToSize();
+        }
     }
 }

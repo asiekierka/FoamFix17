@@ -1,0 +1,1 @@
+* Fixed crash with the TechGuns mod, if the arrowDing tweak was enabled.

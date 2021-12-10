@@ -40,9 +40,14 @@ public class BugfixModSettings {
     public boolean bfSoundSystemUnpauseFixEnabled;
     public boolean bfEntityHeldItemNBTRenderFixEnabled;
     public boolean bfAlphaPassTessellatorCrashFixEnabled;
+    public boolean bfLog4JExploitFixEnabled;
+
+    public boolean mc18SkinSupport;
 
     public boolean lwWeakenResourceCache;
     public boolean lwRemovePackageManifestMap;
+
+    public boolean helloMmcg;
 
     // Mod
     public boolean ArrowDingTweakEnabled;
