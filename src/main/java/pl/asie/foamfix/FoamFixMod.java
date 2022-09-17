@@ -25,6 +25,7 @@ package pl.asie.foamfix;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
@@ -47,6 +48,8 @@ import java.util.Arrays;
 public class FoamFixMod {
     @Mod.Instance
     public static FoamFixMod instance;
+    @SidedProxy(clientSide = "pl.asie.foamfix.ProxyClient", serverSide = "pl.asie.foamfix.ProxyCommon", modId = "foamfix")
+    public static ProxyCommon proxy;
 
     public static Logger logger;
 

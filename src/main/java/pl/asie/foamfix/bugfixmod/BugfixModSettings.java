@@ -42,6 +42,8 @@ public class BugfixModSettings {
     public boolean bfAlphaPassTessellatorCrashFixEnabled;
     public boolean bfLog4JExploitFixEnabled;
 
+    public boolean clOpenUrlLinux;
+
     public boolean mc18SkinSupport;
 
     public boolean lwWeakenResourceCache;

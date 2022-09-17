@@ -150,6 +150,8 @@ public class BugfixModClassTransformer implements IClassTransformer {
                     "Add support for Minecraft 1.8+ skins."
                     ).getBoolean(true);
 
+            settings.clOpenUrlLinux = config.get("tweaks", "openUrlLinux", true, "Fix opening URLs on Linux-based installs.").getBoolean(true);
+
             if (!Arrays.asList(new File(new File(settingsFile.getParent()).getParent()).list()).contains("saves")) {
                 logger.info("You probably are on a dedicated server. Disabling client fixes");
                 settings.BoatDesyncFixEnabled = false;
@@ -392,6 +394,13 @@ public class BugfixModClassTransformer implements IClassTransformer {
                 addPatcher(new TessellatorAlphaPassWrapFixPatcher(
                         "AlphaPassTessellatorCrashFix",
                         "net/minecraft/client/renderer/Tessellator"
+                ));
+            }
+
+            if (settings.clOpenUrlLinux) {
+                addPatcher(new LinuxGuiChatBrowsePatcher(
+                        "LinuxGuiChatBrowsePatch",
+                        "net/minecraft/client/gui/GuiChat"
                 ));
             }
 

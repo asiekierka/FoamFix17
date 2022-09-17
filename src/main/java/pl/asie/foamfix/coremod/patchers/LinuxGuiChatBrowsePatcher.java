@@ -21,7 +21,7 @@
  * SOFTWARE.
  */
 
-package pl.asie.foamfix.forkage.coremod.patchers;
+package pl.asie.foamfix.coremod.patchers;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -31,8 +31,8 @@ import pl.asie.foamfix.coremod.util.ClassSplicingUtil;
 
 import java.util.Iterator;
 
-public class TessellatorAlphaPassWrapFixPatcher extends AbstractPatcher {
-    public TessellatorAlphaPassWrapFixPatcher(String name, String targetClassName) {
+public class LinuxGuiChatBrowsePatcher extends AbstractPatcher {
+    public LinuxGuiChatBrowsePatcher(String name, String targetClassName) {
         super(name, targetClassName, "", "");
     }
 
@@ -43,7 +43,7 @@ public class TessellatorAlphaPassWrapFixPatcher extends AbstractPatcher {
 
     @Override
     protected void patchClassNode(ClassNode classNode) {
-        successful = ClassSplicingUtil.spliceClasses(classNode, "pl.asie.foamfix.forkage.coremod.injects.TessellatorAlphaPassWrapFixInject", false,
-                "getVertexState", "func_147564_a");
+        successful = ClassSplicingUtil.spliceClasses(classNode, "pl.asie.foamfix.coremod.injects.client.LinuxGuiChatBrowseInject", false,
+                "func_146407_a", "func_146407_a");
     }
 }

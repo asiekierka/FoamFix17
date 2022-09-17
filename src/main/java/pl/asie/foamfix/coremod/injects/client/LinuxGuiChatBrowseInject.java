@@ -5,7 +5,7 @@ import pl.asie.foamfix.FoamFixMod;
 
 import java.net.URI;
 
-public class GuiChatBrowsePatch {
+public class LinuxGuiChatBrowseInject {
     private void func_146407_a(URI url) {
         Util.EnumOS osType = Util.getOSType();
         if (osType == Util.EnumOS.LINUX || osType == Util.EnumOS.UNKNOWN) {
