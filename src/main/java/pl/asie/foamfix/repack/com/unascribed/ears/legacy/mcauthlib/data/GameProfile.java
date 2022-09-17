@@ -56,7 +56,7 @@ public class GameProfile {
 
 	static {
 		try {
-			InputStream in = SessionService.class.getResourceAsStream("/com/unascribed/ears/legacy/mcauthlib/yggdrasil_session_pubkey.der");
+			InputStream in = SessionService.class.getResourceAsStream("/pl/asie/foamfix/repack/com/unascribed/ears/legacy/mcauthlib/yggdrasil_session_pubkey.der");
 			try {
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 
