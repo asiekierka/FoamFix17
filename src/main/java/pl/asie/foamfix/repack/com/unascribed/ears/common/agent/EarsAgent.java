@@ -19,21 +19,9 @@ import pl.asie.foamfix.repack.com.unascribed.ears.common.debug.EarsLog;
 public class EarsAgent {
 
 	private static final List<MiniTransformer> TRANSFORMERS;
-	private static final boolean DUMP = Boolean.getBoolean("ears.agent.dump");
+	private static final boolean DUMP = false;
 	
 	public static boolean initialized = false;
-	
-	public static void premain(String arg, Instrumentation ins) {
-		EarsLog.debug("Common:Agent", "Agent initialized");
-		System.out.println("Hello from Ears v"+EarsVersion.PLATFORM+" for "+EarsVersion.PLATFORM_KIND+"!");
-		initialized = true;
-		ins.addTransformer(new ClassFileTransformer() {
-			@Override
-			public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-				return EarsAgent.transform(className, classfileBuffer);
-			}
-		});
-	}
 	
 	public static byte[] transform(String className, byte[] classBytes) {
 		byte[] orig = DUMP ? classBytes : null;
@@ -72,7 +60,7 @@ public class EarsAgent {
 				fos.close();
 			}
 		} catch (IOException e) {
-			EarsLog.debug("Common:Agent", "Failed to write before class to {}", f, e);
+			EarsLog.debug(EarsLog.Tag.COMMON_AGENT, "Failed to write before class to {}", f, e);
 		}
 	}
 
@@ -82,9 +70,9 @@ public class EarsAgent {
 			Class<?> clazz = Class.forName("pl.asie.foamfix.repack.com.unascribed.ears.asm.Patches");
 			Method m = clazz.getMethod("addTransformers", List.class);
 			m.invoke(null, li);
-			EarsLog.debug("Common:Agent", "Discovered {} patch{} in static binder", li.size(), li.size() == 1 ? "" : "es");
+			EarsLog.debug(EarsLog.Tag.COMMON_AGENT, "Discovered {} patch{} in static binder", li.size(), li.size() == 1 ? "" : "es");
 		} catch (Exception e) {
-			EarsLog.debug("Common:Agent", "Failed to discover patches", e);
+			EarsLog.debug(EarsLog.Tag.COMMON_AGENT, "Failed to discover patches", e);
 		}
 		TRANSFORMERS = Collections.unmodifiableList(li);
 	}

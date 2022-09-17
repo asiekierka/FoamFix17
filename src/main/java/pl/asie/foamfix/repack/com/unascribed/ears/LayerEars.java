@@ -7,8 +7,11 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import org.lwjgl.opengl.GL11;
+
 import pl.asie.foamfix.repack.com.unascribed.ears.common.EarsCommon;
-import pl.asie.foamfix.repack.com.unascribed.ears.common.EarsFeatures;
+import pl.asie.foamfix.repack.com.unascribed.ears.common.EarsFeaturesStorage;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.debug.EarsLog;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.legacy.PartiallyUnmanagedEarsRenderDelegate;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.render.EarsRenderDelegate.BodyPart;
@@ -19,6 +22,7 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -34,14 +38,14 @@ public class LayerEars {
 	private float tickDelta;
 	
 	public void doRenderLayer(RenderPlayer render, AbstractClientPlayer entity, float limbDistance, float partialTicks) {
-		EarsLog.debug("Platform:Renderer", "render({}, {}, {})", entity, limbDistance, partialTicks);
+		EarsLog.debug(EarsLog.Tag.PLATFORM_RENDERER, "render({}, {}, {})", entity, limbDistance, partialTicks);
 		this.render = render;
 		this.tickDelta = partialTicks;
 		delegate.render(entity);
 	}
 	
 	public void renderRightArm(RenderPlayer render, AbstractClientPlayer entity) {
-		EarsLog.debug("Platform:Renderer", "renderRightArm({}, {})", render, entity);
+		EarsLog.debug(EarsLog.Tag.PLATFORM_RENDERER, "renderRightArm({}, {})", render, entity);
 		this.render = render;
 		this.tickDelta = 0;
 		delegate.render(entity, BodyPart.RIGHT_ARM);
@@ -63,11 +67,14 @@ public class LayerEars {
 		protected EarsFeatures getEarsFeatures() {
 			ResourceLocation skin = peer.getLocationSkin();
 			ITextureObject tex = Minecraft.getMinecraft().getTextureManager().getTexture(skin);
-			if (Ears.earsSkinFeatures.containsKey(tex) && !peer.isInvisible()) {
-				return Ears.earsSkinFeatures.get(tex);
-			} else {
-				return EarsFeatures.DISABLED;
+			if (Ears.earsSkinFeatures.containsKey(tex)) {
+				EarsFeatures feat = Ears.earsSkinFeatures.get(tex);
+				EarsFeaturesStorage.INSTANCE.put(peer.getGameProfile().getName(), peer.getGameProfile().getId(), feat);
+				if (!peer.isInvisible()) {
+					return feat;
+				}
 			}
+			return EarsFeatures.DISABLED;
 		}
 		
 		@Override
@@ -125,6 +132,18 @@ public class LayerEars {
 		}
 		
 		@Override
+		public void setEmissive(boolean emissive) {
+			super.setEmissive(emissive);
+			OpenGlHelper.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+			if (emissive) {
+				GL11.glDisable(GL11.GL_TEXTURE_2D);
+			} else {
+				GL11.glEnable(GL11.GL_TEXTURE_2D);
+			}
+			OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+		}
+		
+		@Override
 		protected void drawQuad() {
 			Tessellator.instance.draw();
 		}
@@ -168,7 +187,7 @@ public class LayerEars {
 		
 		@Override
 		public boolean needsSecondaryLayersDrawn() {
-			return true;
+			return !peer.isInvisible();
 		}
 
 		@Override

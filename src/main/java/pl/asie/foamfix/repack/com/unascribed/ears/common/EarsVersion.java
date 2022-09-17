@@ -2,7 +2,7 @@ package pl.asie.foamfix.repack.com.unascribed.ears.common;
 
 public class EarsVersion {
 
-	public static final String COMMON = /*VERSION*/"1.4.2"/*/VERSION*/;
+	public static final String COMMON = /*VERSION*/"1.4.6"/*/VERSION*/;
 	public static final String PLATFORM;
 	public static final String PLATFORM_KIND;
 	

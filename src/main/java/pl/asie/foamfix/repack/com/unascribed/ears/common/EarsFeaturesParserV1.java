@@ -4,6 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.EarAnchor;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.EarMode;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.TailMode;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.WingMode;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.debug.EarsLog;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.util.BitInputStream;
 
@@ -11,7 +16,7 @@ class EarsFeaturesParserV1 {
 
 	public static final int MAGIC = 0xEA2501; // EARS01
 	
-	public static EarsFeatures parse(EarsImage img, Alfalfa alfalfa) {
+	public static EarsFeatures.Builder parse(EarsImage img) {
 		ByteArrayOutputStream data = new ByteArrayOutputStream(((4*4)-1)*3);
 		for (int y = 0; y < 4; y++) {
 			for (int x = 0; x < 4; x++) {
@@ -32,46 +37,46 @@ class EarsFeaturesParserV1 {
 			
 			// budget: ((4*4)-1)*3 bytes (360 bits)
 			int ver = bis.read(8);
-			EarsLog.debug("Common:Features", "detect(...): Found v1.{} (Binary) data.", ver);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Found v1.{} (Binary) data.", ver);
 			
 			int ears = bis.read(6);
 			// 6 bits has a range of 0-63
 			// this means we can have up to 20 ear modes, since we're using "base-3" encoding
 			// we're stuck with 3 anchors forever, though
-			EarsFeatures.EarMode earMode;
-			EarsFeatures.EarAnchor earAnchor;
+			EarMode earMode;
+			EarAnchor earAnchor;
 			if (ears == 0) {
-				earMode = EarsFeatures.EarMode.NONE;
-				earAnchor = EarsFeatures.EarAnchor.CENTER;
+				earMode = EarMode.NONE;
+				earAnchor = EarAnchor.CENTER;
 			} else {
-				earMode = byOrdinalOr(EarsFeatures.EarMode.class, ((ears-1)/3)+1, EarsFeatures.EarMode.NONE);
-				earAnchor = byOrdinalOr(EarsFeatures.EarAnchor.class, (ears-1)%3, EarsFeatures.EarAnchor.CENTER);
+				earMode = byOrdinalOr(EarMode.class, ((ears-1)/3)+1, EarMode.NONE);
+				earAnchor = byOrdinalOr(EarAnchor.class, (ears-1)%3, EarAnchor.CENTER);
 			}
-			EarsLog.debug("Common:Features", "detect(...): Ears 6yte: {} (mode={} anchor={})", ears, earMode, earAnchor);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Ears 6yte: {} (mode={} anchor={})", ears, earMode, earAnchor);
 			
 			boolean claws = bis.readBoolean();
-			EarsLog.debug("Common:Features", "detect(...): Claws bit: {}", claws);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Claws bit: {}", claws);
 			boolean horn = bis.readBoolean();
-			EarsLog.debug("Common:Features", "detect(...): Horn bit: {}", horn);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Horn bit: {}", horn);
 		
 			int tailI = bis.read(3);
 			// 3 bits has a range of 0-7 - if we run out, a value of 7 can mean "read elsewhere"
 			
-			EarsFeatures.TailMode tailMode = byOrdinalOr(EarsFeatures.TailMode.class, tailI, EarsFeatures.TailMode.NONE);
+			TailMode tailMode = byOrdinalOr(TailMode.class, tailI, TailMode.NONE);
 			int tailSegments = 0;
 			float tailBend0 = 0;
 			float tailBend1 = 0;
 			float tailBend2 = 0;
 			float tailBend3 = 0;
-			EarsLog.debug("Common:Features", "detect(...): Tail 3yte: {} ({})", tailI, tailMode);
-			if (tailMode != EarsFeatures.TailMode.NONE) {
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Tail 3yte: {} ({})", tailI, tailMode);
+			if (tailMode != TailMode.NONE) {
 				tailSegments = bis.read(2)+1;
-				EarsLog.debug("Common:Features", "detect(...): Tail segments: {}", tailSegments);
+				EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Tail segments: {}", tailSegments);
 				tailBend0 = bis.readSAMUnit(6)*90;
 				tailBend1 = tailSegments > 1 ? bis.readSAMUnit(6)*90 : 0;
 				tailBend2 = tailSegments > 2 ? bis.readSAMUnit(6)*90 : 0;
 				tailBend3 = tailSegments > 3 ? bis.readSAMUnit(6)*90 : 0;
-				EarsLog.debug("Common:Features", "detect(...): Tail bends: {} {} {} {}", tailBend0, tailBend1, tailBend2, tailBend3);
+				EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Tail bends: {} {} {} {}", tailBend0, tailBend1, tailBend2, tailBend3);
 			}
 			
 			int snoutOffset = 0;
@@ -84,34 +89,45 @@ class EarsFeaturesParserV1 {
 				snoutOffset = bis.read(3); // 0-7, but we have to cap it based on height
 				if (snoutOffset > 8-snoutHeight) snoutOffset = 8-snoutHeight;
 			}
-			EarsLog.debug("Common:Features", "detect(...): Snout: {}x{}x{}+0,{}", snoutWidth, snoutHeight, snoutDepth, snoutOffset);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Snout: {}x{}x{}+0,{}", snoutWidth, snoutHeight, snoutDepth, snoutOffset);
 			
 			float chestSize = bis.readUnit(5);
 			if (chestSize > 0) {
-				EarsLog.debug("Common:Features", "detect(...): Chest: {}%", (int)(chestSize*100));
+				EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Chest: {}%", (int)(chestSize*100));
 			}
 			
 			int wingI = bis.read(3);
 			// 3 bits has a range of 0-7
-			EarsFeatures.WingMode wingMode = byOrdinalOr(EarsFeatures.WingMode.class, wingI, EarsFeatures.WingMode.NONE);
-			boolean animateWings = wingMode == EarsFeatures.WingMode.NONE ? false : bis.readBoolean();
-			EarsLog.debug("Common:Features", "detect(...): Wing 3yte: {} (mode={} + animated={})", wingI, wingMode, animateWings);
+			WingMode wingMode = byOrdinalOr(WingMode.class, wingI, WingMode.NONE);
+			boolean animateWings = wingMode == WingMode.NONE ? false : bis.readBoolean();
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Wing 3yte: {} (mode={} + animated={})", wingI, wingMode, animateWings);
 			
 			boolean capeEnabled = bis.readBoolean();
-			EarsLog.debug("Common:Features", "detect(...): Cape: {}", capeEnabled);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Cape: {}", capeEnabled);
 			
-			return new EarsFeatures(
-					earMode, earAnchor,
-					claws, horn,
-					tailMode, tailSegments, tailBend0, tailBend1, tailBend2, tailBend3,
-					snoutOffset, snoutWidth, snoutHeight, snoutDepth,
-					chestSize,
-					wingMode, animateWings,
-					capeEnabled,
-					alfalfa);
+			boolean emissive = bis.readBoolean();
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Emissive: {}", emissive);
+			
+			return EarsFeatures.builder()
+					.earMode(earMode)
+					.earAnchor(earAnchor)
+					.claws(claws)
+					.horn(horn)
+					.tailMode(tailMode)
+					.tailSegments(tailSegments)
+					.tailBends(tailBend0, tailBend1, tailBend2, tailBend3)
+					.snoutOffset(snoutOffset)
+					.snoutWidth(snoutWidth)
+					.snoutHeight(snoutHeight)
+					.snoutDepth(snoutDepth)
+					.chestSize(chestSize)
+					.wingMode(wingMode)
+					.animateWings(animateWings)
+					.capeEnabled(capeEnabled)
+					.emissive(emissive);
 		} catch (IOException e) {
-			EarsLog.debug("Common:Features", "detect(...): Error while parsing v1 (Binary) data. Disabling", e);
-			return EarsFeatures.DISABLED;
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Error while parsing v1 (Binary) data. Disabling", e);
+			return null;
 		}
 	}
 

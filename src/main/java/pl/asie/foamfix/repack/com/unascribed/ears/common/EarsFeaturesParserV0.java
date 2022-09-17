@@ -5,6 +5,11 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.EarAnchor;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.EarMode;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.TailMode;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.WingMode;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.debug.EarsLog;
 
 class EarsFeaturesParserV0 {
@@ -48,10 +53,10 @@ class EarsFeaturesParserV0 {
 		
 		static {
 			if (EarsLog.DEBUG) {
-				EarsLog.debug("Common:Features", "All legal magic pixels:");
+				EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "All legal magic pixels:");
 				for (MagicPixel mp : values()) {
 					if (mp == UNKNOWN) continue;
-					EarsLog.debug("Common:Features", "- {}: #{}",
+					EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "- {}: #{}",
 							mp, upperHex24Dbg(mp.rgb));
 				}
 			}
@@ -70,31 +75,31 @@ class EarsFeaturesParserV0 {
 			this.horn = horn;
 		}
 		
-		public static final Map<EarsFeaturesParserV0.MagicPixel, Protrusions> BY_MAGIC = buildMap(
-				EarsFeaturesParserV0.MagicPixel.BLUE, NONE,
-				EarsFeaturesParserV0.MagicPixel.RED, NONE,
-				EarsFeaturesParserV0.MagicPixel.GREEN, CLAWS,
-				EarsFeaturesParserV0.MagicPixel.PURPLE, HORN,
-				EarsFeaturesParserV0.MagicPixel.CYAN, CLAWS_AND_HORN
+		public static final Map<MagicPixel, Protrusions> BY_MAGIC = buildMap(
+				MagicPixel.BLUE, NONE,
+				MagicPixel.RED, NONE,
+				MagicPixel.GREEN, CLAWS,
+				MagicPixel.PURPLE, HORN,
+				MagicPixel.CYAN, CLAWS_AND_HORN
 		);
 	}
 	
-	public static final Map<MagicPixel, EarsFeatures.EarMode> EAR_MODE_BY_MAGIC = buildMap(
-			MagicPixel.RED, EarsFeatures.EarMode.NONE,
-			MagicPixel.BLUE, EarsFeatures.EarMode.ABOVE,
-			MagicPixel.GREEN, EarsFeatures.EarMode.SIDES,
-			MagicPixel.PURPLE, EarsFeatures.EarMode.BEHIND,
-			MagicPixel.CYAN, EarsFeatures.EarMode.AROUND,
-			MagicPixel.ORANGE, EarsFeatures.EarMode.FLOPPY,
-			MagicPixel.PINK, EarsFeatures.EarMode.CROSS,
-			MagicPixel.PURPLE2, EarsFeatures.EarMode.OUT,
-			MagicPixel.WHITE, EarsFeatures.EarMode.TALL,
-			MagicPixel.GRAY, EarsFeatures.EarMode.TALL_CROSS
+	public static final Map<MagicPixel, EarMode> EAR_MODE_BY_MAGIC = buildMap(
+			MagicPixel.RED, EarMode.NONE,
+			MagicPixel.BLUE, EarMode.ABOVE,
+			MagicPixel.GREEN, EarMode.SIDES,
+			MagicPixel.PURPLE, EarMode.BEHIND,
+			MagicPixel.CYAN, EarMode.AROUND,
+			MagicPixel.ORANGE, EarMode.FLOPPY,
+			MagicPixel.PINK, EarMode.CROSS,
+			MagicPixel.PURPLE2, EarMode.OUT,
+			MagicPixel.WHITE, EarMode.TALL,
+			MagicPixel.GRAY, EarMode.TALL_CROSS
 	);
-	public static final Map<MagicPixel, EarsFeatures.EarAnchor> EAR_ANCHOR_BY_MAGIC = buildMap(
-			MagicPixel.BLUE, EarsFeatures.EarAnchor.CENTER,
-			MagicPixel.GREEN, EarsFeatures.EarAnchor.FRONT,
-			MagicPixel.RED, EarsFeatures.EarAnchor.BACK
+	public static final Map<MagicPixel, EarAnchor> EAR_ANCHOR_BY_MAGIC = buildMap(
+			MagicPixel.BLUE, EarAnchor.CENTER,
+			MagicPixel.GREEN, EarAnchor.FRONT,
+			MagicPixel.RED, EarAnchor.BACK
 	);
 	
 	public static final Map<MagicPixel, Protrusions> PROTRUSIONS_BY_MAGIC = buildMap(
@@ -104,28 +109,28 @@ class EarsFeaturesParserV0 {
 			MagicPixel.PURPLE, Protrusions.HORN,
 			MagicPixel.CYAN, Protrusions.CLAWS_AND_HORN
 	);
-	public static final Map<MagicPixel, EarsFeatures.TailMode> TAIL_MODE_BY_MAGIC = buildMap(
-			MagicPixel.RED, EarsFeatures.TailMode.NONE,
-			MagicPixel.BLUE, EarsFeatures.TailMode.DOWN,
-			MagicPixel.GREEN, EarsFeatures.TailMode.BACK,
-			MagicPixel.PURPLE, EarsFeatures.TailMode.UP,
-			MagicPixel.ORANGE, EarsFeatures.TailMode.VERTICAL
+	public static final Map<MagicPixel, TailMode> TAIL_MODE_BY_MAGIC = buildMap(
+			MagicPixel.RED, TailMode.NONE,
+			MagicPixel.BLUE, TailMode.DOWN,
+			MagicPixel.GREEN, TailMode.BACK,
+			MagicPixel.PURPLE, TailMode.UP,
+			MagicPixel.ORANGE, TailMode.VERTICAL
 	);
-	public static final Map<MagicPixel, EarsFeatures.WingMode> WING_MODE_BY_MAGIC = buildMap(
-			MagicPixel.BLUE, EarsFeatures.WingMode.NONE,
-			MagicPixel.RED, EarsFeatures.WingMode.NONE,
-			MagicPixel.PINK, EarsFeatures.WingMode.SYMMETRIC_DUAL,
-			MagicPixel.GREEN, EarsFeatures.WingMode.SYMMETRIC_SINGLE,
-			MagicPixel.CYAN, EarsFeatures.WingMode.ASYMMETRIC_L,
-			MagicPixel.ORANGE, EarsFeatures.WingMode.ASYMMETRIC_R
+	public static final Map<MagicPixel, WingMode> WING_MODE_BY_MAGIC = buildMap(
+			MagicPixel.BLUE, WingMode.NONE,
+			MagicPixel.RED, WingMode.NONE,
+			MagicPixel.PINK, WingMode.SYMMETRIC_DUAL,
+			MagicPixel.GREEN, WingMode.SYMMETRIC_SINGLE,
+			MagicPixel.CYAN, WingMode.ASYMMETRIC_L,
+			MagicPixel.ORANGE, WingMode.ASYMMETRIC_R
 	);
 
-	public static EarsFeatures parse(EarsImage img, Alfalfa alfalfa) {
-		EarsLog.debug("Common:Features", "detect(...): Found v0 (Pixelwise) data.");
-		EarsFeatures.EarMode earMode = getMagicPixel(img, 1, EAR_MODE_BY_MAGIC, EarsFeatures.EarMode.NONE, "ear mode");
-		EarsFeatures.EarAnchor earAnchor = getMagicPixel(img, 2, EAR_ANCHOR_BY_MAGIC, EarsFeatures.EarAnchor.CENTER, "ear anchor", earMode != EarsFeatures.EarMode.NONE && earMode != EarsFeatures.EarMode.BEHIND);
+	public static EarsFeatures.Builder parse(EarsImage img) {
+		EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Found v0 (Pixelwise) data.");
+		EarMode earMode = getMagicPixel(img, 1, EAR_MODE_BY_MAGIC, EarMode.NONE, "ear mode");
+		EarAnchor earAnchor = getMagicPixel(img, 2, EAR_ANCHOR_BY_MAGIC, EarAnchor.CENTER, "ear anchor", earMode != EarMode.NONE && earMode != EarMode.BEHIND);
 		Protrusions protrusions = getMagicPixel(img, 3, PROTRUSIONS_BY_MAGIC, Protrusions.NONE, "protrusions");
-		EarsFeatures.TailMode tailMode = getMagicPixel(img, 4, TAIL_MODE_BY_MAGIC, EarsFeatures.TailMode.NONE, "tail mode");
+		TailMode tailMode = getMagicPixel(img, 4, TAIL_MODE_BY_MAGIC, TailMode.NONE, "tail mode");
 		int tailBend = getPixel(img, 5);
 		float tailBend0 = 0;
 		float tailBend1 = 0;
@@ -133,7 +138,7 @@ class EarsFeaturesParserV0 {
 		float tailBend3 = 0;
 		int tailSegments = 0;
 		if (MagicPixel.from(tailBend) == MagicPixel.BLUE) {
-			EarsLog.debug("Common:Features", "detect(...): The tail bend pixel is Magic Blue, pretending it's black");
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The tail bend pixel is Magic Blue, pretending it's black");
 		} else {
 			tailSegments++;
 			tailBend0 = pxValToUnit(255-((tailBend&0xFF000000) >>> 24))*90;
@@ -146,15 +151,15 @@ class EarsFeaturesParserV0 {
 					tailSegments++;
 					if (tailBend3 != 0) {
 						tailSegments++;
-						EarsLog.debug("Common:Features", "detect(...): The tail bend pixel is #{} - 4 segments with angles {}, {}, {}, {}", upperHex32Dbg(tailBend), tailBend0, tailBend1, tailBend2, tailBend3);
+						EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The tail bend pixel is #{} - 4 segments with angles {}, {}, {}, {}", upperHex32Dbg(tailBend), tailBend0, tailBend1, tailBend2, tailBend3);
 					} else {
-						EarsLog.debug("Common:Features", "detect(...): The tail bend pixel is #{} - 3 segments with angles {}, {}, {}", upperHex32Dbg(tailBend), tailBend0, tailBend1, tailBend2);
+						EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The tail bend pixel is #{} - 3 segments with angles {}, {}, {}", upperHex32Dbg(tailBend), tailBend0, tailBend1, tailBend2);
 					}
 				} else {
-					EarsLog.debug("Common:Features", "detect(...): The tail bend pixel is #{}XX - 2 segments with angles {}, {}", upperHex32f24Dbg(tailBend), tailBend0, tailBend1);
+					EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The tail bend pixel is #{}XX - 2 segments with angles {}, {}", upperHex32f24Dbg(tailBend), tailBend0, tailBend1);
 				}
 			} else {
-				EarsLog.debug("Common:Features", "detect(...): The tail bend pixel is #{}XXXX - 1 segment with angle {}", upperHex32f16Dbg(tailBend), tailBend0);
+				EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The tail bend pixel is #{}XXXX - 1 segment with angle {}", upperHex32f16Dbg(tailBend), tailBend0);
 			}
 		}
 		int snout = getPixel(img, 6);
@@ -164,7 +169,7 @@ class EarsFeaturesParserV0 {
 		int snoutHeight = 0;
 		int snoutDepth = 0;
 		if (MagicPixel.from(snout) == MagicPixel.BLUE) {
-			EarsLog.debug("Common:Features", "detect(...): The snout pixel is Magic Blue, pretending it's black");
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The snout pixel is Magic Blue, pretending it's black");
 		} else {
 			snoutOffset = ((etc&0x0000FF00)>>8);
 			snoutWidth = ((snout&0x00FF0000)>>16);
@@ -174,37 +179,42 @@ class EarsFeaturesParserV0 {
 			if (snoutWidth > 7) snoutWidth = 7;
 			if (snoutHeight > 4) snoutHeight = 4;
 			if (snoutDepth > 8) snoutDepth = 8;
-			EarsLog.debug("Common:Features", "detect(...): The snout pixel is #{} and the etc pixel is #{} - snout geometry is {}x{}x{}+0,{}", upperHex24Dbg(snout), upperHex24Dbg(etc), snoutWidth, snoutHeight, snoutDepth, snoutOffset);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The snout pixel is #{} and the etc pixel is #{} - snout geometry is {}x{}x{}+0,{}", upperHex24Dbg(snout), upperHex24Dbg(etc), snoutWidth, snoutHeight, snoutDepth, snoutOffset);
 		}
 		float chestSize = 0;
 		boolean capeEnabled = false;
 		if (MagicPixel.from(etc) == MagicPixel.BLUE) {
-			EarsLog.debug("Common:Features", "detect(...): The etc pixel is Magic Blue, pretending it's black");
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The etc pixel is Magic Blue, pretending it's black");
 		} else {
 			// leave the upper half of the range in case we want it for something later
 			chestSize = ((etc&0x00FF0000)>>16)/128f;
 			if (chestSize > 1) chestSize = 1;
 			capeEnabled = (etc & 16) != 0;
 			if (chestSize > 0) {
-				EarsLog.debug("Common:Features", "detect(...): The etc pixel is #{} - {}% size", upperHex24Dbg(etc), (int)(chestSize*100));
+				EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The etc pixel is #{} - {}% size", upperHex24Dbg(etc), (int)(chestSize*100));
 			}
-			EarsLog.debug("Common:Features", "detect(...): The etc pixel is #{} - cape enabled: {}", upperHex24Dbg(etc), capeEnabled);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The etc pixel is #{} - cape enabled: {}", upperHex24Dbg(etc), capeEnabled);
 		}
-		EarsFeatures.WingMode wingMode = getMagicPixel(img, 8, WING_MODE_BY_MAGIC, EarsFeatures.WingMode.NONE, "wing mode");
-		if (wingMode != EarsFeatures.WingMode.NONE && !alfalfa.data.containsKey("wing")) {
-			EarsLog.debug("Common:Features", "detect(...): Wings are enabled, but there's no wing texture in the alfalfa. Disabling");
-			wingMode = EarsFeatures.WingMode.NONE;
-		}
+		WingMode wingMode = getMagicPixel(img, 8, WING_MODE_BY_MAGIC, WingMode.NONE, "wing mode");
 		boolean animateWings = getMagicPixel(img, 9) != MagicPixel.RED;
-		return new EarsFeatures(
-				earMode, earAnchor,
-				protrusions.claws, protrusions.horn,
-				tailMode, tailSegments, tailBend0, tailBend1, tailBend2, tailBend3,
-				snoutOffset, snoutWidth, snoutHeight, snoutDepth,
-				chestSize,
-				wingMode, animateWings,
-				capeEnabled,
-				alfalfa);
+		boolean emissive = getMagicPixel(img, 10) == MagicPixel.ORANGE;
+		return EarsFeatures.builder()
+				.earMode(earMode)
+				.earAnchor(earAnchor)
+				.claws(protrusions.claws)
+				.horn(protrusions.horn)
+				.tailMode(tailMode)
+				.tailSegments(tailSegments)
+				.tailBends(tailBend0, tailBend1, tailBend2, tailBend3)
+				.snoutOffset(snoutOffset)
+				.snoutWidth(snoutWidth)
+				.snoutHeight(snoutHeight)
+				.snoutDepth(snoutDepth)
+				.chestSize(chestSize)
+				.wingMode(wingMode)
+				.animateWings(animateWings)
+				.capeEnabled(capeEnabled)
+				.emissive(emissive);
 	}
 
 	/**
@@ -237,7 +247,7 @@ class EarsFeaturesParserV0 {
 		int rgb = img.getARGB(x, y);
 		MagicPixel mp = MagicPixel.from(rgb);
 		if (complain && mp == MagicPixel.UNKNOWN) {
-			EarsLog.debug("Common:Features", "detect(...): Pixel at {}, {} is not a valid magic pixel - it's #{}", x, y, upperHex24Dbg(img.getARGB(0, 32)));
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): Pixel at {}, {} is not a valid magic pixel - it's #{}", x, y, upperHex24Dbg(img.getARGB(0, 32)));
 		}
 		return mp;
 	}
@@ -248,17 +258,17 @@ class EarsFeaturesParserV0 {
 	
 	private static <T> T getMagicPixel(EarsImage img, int idx, Map<MagicPixel, T> map, T def, String what, boolean relevant) {
 		if (!relevant) {
-			EarsLog.debug("Common:Features", "detect(...): The {} pixel is not relevant; skipping it", what);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The {} pixel is not relevant; skipping it", what);
 			return null;
 		}
 		MagicPixel mp = getMagicPixel(img, idx);
 		T t = map.get(mp);
 		if (t == null) {
 			if (def == null) return null;
-			EarsLog.debug("Common:Features", "detect(...): {} is not valid for the {} pixel; pretending it's {}", mp, what, def);
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): {} is not valid for the {} pixel; pretending it's {}", mp, what, def);
 			return def;
 		}
-		EarsLog.debug("Common:Features", "detect(...): The {} pixel is {} - setting {} to {}", what, mp, what, t);
+		EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The {} pixel is {} - setting {} to {}", what, mp, what, t);
 		return t;
 	}
 	
@@ -266,7 +276,7 @@ class EarsFeaturesParserV0 {
 	private static boolean getMagicPixel(EarsImage img, int idx, MagicPixel truePixel, String what) {
 		MagicPixel mp = getMagicPixel(img, idx);
 		boolean b = mp == truePixel;
-		EarsLog.debug("Common:Features", "detect(...): The {} pixel is {} - {} {}", what, mp, b ? "enabling" : "disabling", what);
+		EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "detect(...): The {} pixel is {} - {} {}", what, mp, b ? "enabling" : "disabling", what);
 		return b;
 	}
 

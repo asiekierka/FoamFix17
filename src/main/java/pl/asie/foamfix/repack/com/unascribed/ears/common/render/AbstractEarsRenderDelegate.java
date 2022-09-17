@@ -1,15 +1,13 @@
 package pl.asie.foamfix.repack.com.unascribed.ears.common.render;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.EarsCommon;
-import pl.asie.foamfix.repack.com.unascribed.ears.common.EarsFeatures;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.debug.EarsLog;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.util.Decider;
-import pl.asie.foamfix.repack.com.unascribed.ears.common.legacy.ImmediateEarsRenderDelegate;
-import pl.asie.foamfix.repack.com.unascribed.ears.common.legacy.PartiallyUnmanagedEarsRenderDelegate;
-import pl.asie.foamfix.repack.com.unascribed.ears.common.legacy.UnmanagedEarsRenderDelegate;
 
 /**
  * Implements some basic shared render logic to reduce duplicated code.
@@ -20,12 +18,8 @@ import pl.asie.foamfix.repack.com.unascribed.ears.common.legacy.UnmanagedEarsRen
  * A subclass should be used if possible. For "exotic" platforms (such as the Manipulator), consider
  * implementing EarsRenderDelegate directly. AbstractEarsRenderDelegate and friends all make various
  * assumptions that are only true within Minecraft itself.
- * 
- * @see ImmediateEarsRenderDelegate Immediate, for versions with a broken Tesselator and no state or texture manager (e.g. Beta 1.7, 1.2.5)
- * @see UnmanagedEarsRenderDelegate Unmanaged, for versions without a state manager or texture manager (e.g. 1.4, 1.5)
- * @see PartiallyUnmanagedEarsRenderDelegate PartiallyUnmanaged, for versions without a state manager (e.g. 1.6, 1.7)
- * @see DirectEarsRenderDelegate Direct, for versions with a state manager (e.g. 1.8, 1.12, 1.14)
- * @see IndirectEarsRenderDelegate Indirect, for versions with the RenderLayer/VertexConsumerProvider abstraction (e.g. 1.15, 1.16)
+ *
+ * @see pl.asie.foamfix.repack.com.unascribed.ears.common.legacy.PartiallyUnmanagedEarsRenderDelegate PartiallyUnmanaged, for versions without a state manager (e.g. 1.6, 1.7)
  * 
  * @param <TPeer> the type of the "render peer"; usually something like AbstractClientPlayer
  * @param <TModelPart> the type of model parts; usually ModelPart (Yarn/Mojmap) or ModelRenderer (MCP)
@@ -40,6 +34,7 @@ public abstract class AbstractEarsRenderDelegate<TPeer, TModelPart> implements E
 	protected int stackDepth;
 	protected BodyPart permittedBodyPart;
 	protected TexSource bound;
+	protected boolean emissive;
 
 	@Override
 	public void setUp() {
@@ -90,7 +85,7 @@ public abstract class AbstractEarsRenderDelegate<TPeer, TModelPart> implements E
 	@Override
 	public void anchorTo(BodyPart part) {
 		if (permittedBodyPart != null && part != permittedBodyPart) {
-			EarsLog.debug("Platform:Renderer:Delegate", "anchorTo(...): Part is not permissible in this pass, skip rendering until pop");
+			EarsLog.debug(EarsLog.Tag.PLATFORM_RENDERER_DELEGATE, "anchorTo(...): Part is not permissible in this pass, skip rendering until pop");
 			if (skipRendering == 0) {
 				skipRendering = 1;
 			}
@@ -98,7 +93,7 @@ public abstract class AbstractEarsRenderDelegate<TPeer, TModelPart> implements E
 		}
 		TModelPart modelPart = decideModelPart(Decider.<BodyPart, TModelPart>begin(part)).orElse(null);
 		if (modelPart == null || !isVisible(modelPart)) {
-			EarsLog.debug("Platform:Renderer:Delegate", "anchorTo(...): Part is not {}, skip rendering until pop", modelPart == null ? "valid" : "visible");
+			EarsLog.debug(EarsLog.Tag.PLATFORM_RENDERER_DELEGATE, "anchorTo(...): Part is not {}, skip rendering until pop", modelPart == null ? "valid" : "visible");
 			if (skipRendering == 0) {
 				skipRendering = 1;
 			}
@@ -142,13 +137,17 @@ public abstract class AbstractEarsRenderDelegate<TPeer, TModelPart> implements E
 		float[][] uv = EarsCommon.calculateUVs(u, v, w, h, rot, flip, bound);
 		float g = grow.grow;
 		
-		float b = getBrightness();
+		float b = emissive ? 1 : getBrightness();
 
+		float nX = 0;
+		float nY = emissive ? 1 : 0;
+		float nZ = emissive ? 0 : -1;
+		
 		beginQuad();
-		addVertex(-g, h+g, 0, b, b, b, 1f, uv[0][0], uv[0][1], 0, 0, -1);
-		addVertex(w+g, h+g, 0, b, b, b, 1f, uv[1][0], uv[1][1], 0, 0, -1);
-		addVertex(w+g, -g, 0, b, b, b, 1f, uv[2][0], uv[2][1], 0, 0, -1);
-		addVertex(-g, -g, 0, b, b, b, 1f, uv[3][0], uv[3][1], 0, 0, -1);
+		addVertex(-g, h+g, 0, b, b, b, 1f, uv[0][0], uv[0][1], nX, nY, nZ);
+		addVertex(w+g, h+g, 0, b, b, b, 1f, uv[1][0], uv[1][1], nX, nY, nZ);
+		addVertex(w+g, -g, 0, b, b, b, 1f, uv[2][0], uv[2][1], nX, nY, nZ);
+		addVertex(-g, -g, 0, b, b, b, 1f, uv[3][0], uv[3][1], nX, nY, nZ);
 		drawQuad();
 	}
 
@@ -159,13 +158,17 @@ public abstract class AbstractEarsRenderDelegate<TPeer, TModelPart> implements E
 		float[][] uv = EarsCommon.calculateUVs(u, v, w, h, rot, flip.flipHorizontally(), bound);
 		float g = grow.grow;
 		
-		float b = getBrightness();
+		float b = emissive ? 1 : getBrightness();
+		
+		float nX = 0;
+		float nY = emissive ? 1 : 0;
+		float nZ = emissive ? 0 : 1;
 		
 		beginQuad();
-		addVertex(-g, -g, 0, b, b, b, 1f, uv[3][0], uv[3][1], 0, 0, 1);
-		addVertex(w+g, -g, 0, b, b, b, 1f, uv[2][0], uv[2][1], 0, 0, 1);
-		addVertex(w+g, h+g, 0, b, b, b, 1f, uv[1][0], uv[1][1], 0, 0, 1);
-		addVertex(-g, h+g, 0, b, b, b, 1f, uv[0][0], uv[0][1], 0, 0, 1);
+		addVertex(-g, -g, 0, b, b, b, 1f, uv[3][0], uv[3][1], nX, nY, nZ);
+		addVertex(w+g, -g, 0, b, b, b, 1f, uv[2][0], uv[2][1], nX, nY, nZ);
+		addVertex(w+g, h+g, 0, b, b, b, 1f, uv[1][0], uv[1][1], nX, nY, nZ);
+		addVertex(-g, h+g, 0, b, b, b, 1f, uv[0][0], uv[0][1], nX, nY, nZ);
 		drawQuad();
 	}
 	
@@ -200,8 +203,12 @@ public abstract class AbstractEarsRenderDelegate<TPeer, TModelPart> implements E
 		if (src == this.bound) return;
 		if (src == TexSource.SKIN) {
 			doBindSkin();
-		} else {
+		} else if (!src.isBuiltIn()) {
 			doBindAux(src, src.getPNGData(feat));
+		} else if (canBind(src)) {
+			doBindBuiltin(src);
+		} else {
+			EarsLog.debug(EarsLog.Tag.COMMON_RENDERER, "Attempt to bind unsupported texture {}", src);
 		}
 		this.bound = src;
 	}
@@ -209,15 +216,29 @@ public abstract class AbstractEarsRenderDelegate<TPeer, TModelPart> implements E
 	protected abstract void doBindSkin();
 	protected abstract void doBindAux(TexSource src, byte[] pngData);
 	
-	protected ByteBuffer toNativeBuffer(byte[] arr) {
+	protected void doBindBuiltin(TexSource src) {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public boolean canBind(TexSource tex) {
+		return tex == TexSource.SKIN || !tex.isBuiltIn();
+	}
+	
+	public static ByteBuffer toNativeBuffer(byte[] arr) {
 		ByteBuffer buf = ByteBuffer.allocateDirect(arr.length).order(ByteOrder.nativeOrder());
-		buf.put(arr).flip();
+		((Buffer)buf.put(arr)).flip();
 		return buf;
 	}
 	
 	@Override
 	public boolean needsSecondaryLayersDrawn() {
 		return false;
+	}
+	
+	@Override
+	public void setEmissive(boolean emissive) {
+		this.emissive = emissive;
 	}
 	
 }

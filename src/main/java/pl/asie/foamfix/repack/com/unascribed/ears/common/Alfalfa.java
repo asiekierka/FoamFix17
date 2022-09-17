@@ -14,8 +14,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import pl.asie.foamfix.repack.com.unascribed.ears.api.Slice;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.AlfalfaData;
+import pl.asie.foamfix.repack.com.unascribed.ears.common.EarsCommon.Rectangle;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.debug.EarsLog;
-import pl.asie.foamfix.repack.com.unascribed.ears.common.util.Slice;
 
 /**
  * Extra data stored in the alpha channel of forced-opaque areas.
@@ -27,21 +29,21 @@ public class Alfalfa {
 	 * messing up previews in MultiMC and various avatar rendering services.
 	 * @see EarsCommon#FORCED_OPAQUE_REGIONS
 	 */
-	public static final List<EarsCommon.Rectangle> ENCODE_REGIONS = Collections.unmodifiableList(Arrays.asList(
-			new EarsCommon.Rectangle(8, 0, 24, 8),
-			new EarsCommon.Rectangle(0, 8, 8, 16),
-			new EarsCommon.Rectangle(16, 8, 32, 16),
+	public static final List<Rectangle> ENCODE_REGIONS = Collections.unmodifiableList(Arrays.asList(
+			new Rectangle(8, 0, 24, 8),
+			new Rectangle(0, 8, 8, 16),
+			new Rectangle(16, 8, 32, 16),
 			
-			new EarsCommon.Rectangle(4, 16, 12, 20),
-			new EarsCommon.Rectangle(20, 16, 36, 20),
-			new EarsCommon.Rectangle(44, 16, 52, 20),
+			new Rectangle(4, 16, 12, 20),
+			new Rectangle(20, 16, 36, 20),
+			new Rectangle(44, 16, 52, 20),
 			
-			new EarsCommon.Rectangle(0, 20, 56, 32),
+			new Rectangle(0, 20, 56, 32),
 			
-			new EarsCommon.Rectangle(20, 48, 28, 52),
-			new EarsCommon.Rectangle(36, 48, 44, 52),
+			new Rectangle(20, 48, 28, 52),
+			new Rectangle(36, 48, 44, 52),
 				
-			new EarsCommon.Rectangle(16, 52, 48, 64)
+			new Rectangle(16, 52, 48, 64)
 		));
 	
 	// cannot be longer than 64 entries (as if we'll ever reach that)
@@ -49,64 +51,21 @@ public class Alfalfa {
 		"END", "wing", "erase", "cape"
 	));
 	
-	public static final Alfalfa NONE = new Alfalfa(0, Collections.<String, Slice>emptyMap());
-	
 	public static final int MAGIC = 0xEA1FA1FA; // EALFALFA
-	
-	public final int version;
-	public final Map<String, Slice> data;
-	
-	public Alfalfa(int version, Map<String, Slice> data) {
-		this.version = version;
-		this.data = Collections.unmodifiableMap(new HashMap<String, Slice>(data));
-	}
 
-	@Override
-	public String toString() {
-		return "Alfalfa[version=" + version + ", data=" + data + "]";
-	}
-	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((data == null) ? 0 : data.hashCode());
-		result = prime * result + version;
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Alfalfa other = (Alfalfa) obj;
-		if (data == null) {
-			if (other.data != null)
-				return false;
-		} else if (!data.equals(other.data))
-			return false;
-		if (version != other.version)
-			return false;
-		return true;
-	}
-
-	public static Alfalfa read(InputStream in) throws IOException {
+	public static AlfalfaData read(InputStream in) throws IOException {
 		DataInputStream dis = new DataInputStream(in);
 		dis.skipBytes(1);
 		int magic = dis.readInt();
 		if (magic != MAGIC) {
-			EarsLog.debug("Common:Features", "Alfalfa.read: Magic number does not match. Expected {}, got {}", Integer.toHexString(MAGIC), Long.toHexString(magic));
-			return NONE;
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Alfalfa.read: Magic number does not match. Expected {}, got {}", Integer.toHexString(MAGIC), Long.toHexString(magic));
+			return AlfalfaData.NONE;
 		}
 		int version = dis.readUnsignedByte();
-		EarsLog.debug("Common:Features", "Alfalfa.read: Discovered Alfalfa v{} data", version);
+		EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Alfalfa.read: Discovered Alfalfa v{} data", version);
 		if (version != 1) {
-			EarsLog.debug("Common:Features", "Alfalfa.read: Don't know how to read this version, ignoring");
-			return NONE;
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Alfalfa.read: Don't know how to read this version, ignoring");
+			return AlfalfaData.NONE;
 		}
 		byte[] buf = new byte[255];
 		Map<String, Slice> map = new HashMap<String, Slice>();
@@ -143,19 +102,19 @@ public class Alfalfa {
 			}
 			byte[] data = baos.toByteArray();
 			map.put(k, new Slice(data, 0, data.length));
-			EarsLog.debug("Common:Features", "Alfalfa.read: Found entry {} with {} byte{} of data", k, data.length, data.length == 1 ? "" : "s");
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Alfalfa.read: Found entry {} with {} byte{} of data", k, data.length, data.length == 1 ? "" : "s");
 		}
-		EarsLog.debug("Common:Features", "Alfalfa.read: Found {} entr{}", map.size(), map.size() == 1 ? "y" : "ies");
-		return new Alfalfa(version, map);
+		EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Alfalfa.read: Found {} entr{}", map.size(), map.size() == 1 ? "y" : "ies");
+		return new AlfalfaData(version, map);
 	}
 	
-	public void write(OutputStream out) throws IOException {
-		if (version == 0) return;
-		if (version != 1) throw new IOException("Don't know how to write Alfalfa version "+version);
+	public static void write(AlfalfaData data, OutputStream out) throws IOException {
+		if (data.version == 0) return;
+		if (data.version != 1) throw new IOException("Don't know how to write Alfalfa version "+data.version);
 		DataOutputStream dos = new DataOutputStream(out);
 		dos.writeInt(MAGIC);
-		dos.writeByte(version);
-		for (Map.Entry<String, Slice> en : data.entrySet()) {
+		dos.writeByte(data.version);
+		for (Map.Entry<String, Slice> en : data.data.entrySet()) {
 			String k = en.getKey();
 			int idx = PREDEF_KEYS.indexOf(k);
 			if (k.startsWith("!unk")) {
@@ -183,10 +142,11 @@ public class Alfalfa {
 		dos.writeByte(0);
 	}
 
-	public static Alfalfa read(EarsImage img) {
+	public static AlfalfaData read(EarsImage img) {
+		if (img.getWidth() != 64 || img.getHeight() != 64) return AlfalfaData.NONE;
 		BigInteger bi = BigInteger.ZERO;
 		int read = 0;
-		for (EarsCommon.Rectangle rect : ENCODE_REGIONS) {
+		for (Rectangle rect : ENCODE_REGIONS) {
 			for (int x = rect.x1; x < rect.x2; x++) {
 				for (int y = rect.y1; y < rect.y2; y++) {
 					int a = (img.getARGB(x, y)>>24)&0xFF;
@@ -200,29 +160,29 @@ public class Alfalfa {
 			}
 		}
 		if (bi.equals(BigInteger.ZERO)) {
-			EarsLog.debug("Common:Features", "Alfalfa.read: Found no data in alpha channel");
-			return NONE;
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Alfalfa.read: Found no data in alpha channel");
+			return AlfalfaData.NONE;
 		}
-		EarsLog.debug("Common:Features", "Alfalfa.read: Read {} ayte{} of data from alpha channel", read, read == 1 ? "" : "s");
+		EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Alfalfa.read: Read {} ayte{} of data from alpha channel", read, read == 1 ? "" : "s");
 		try {
 			return read(new ByteArrayInputStream(bi.toByteArray()));
 		} catch (Exception e) {
-			EarsLog.debug("Common:Features", "Alfalfa.read: Exception while reading data", e);
-			return NONE;
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Alfalfa.read: Exception while reading data", e);
+			return AlfalfaData.NONE;
 		}
 	}
 
-	public void write(WritableEarsImage img) {
+	public static void write(AlfalfaData data, WritableEarsImage img) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		write(baos);
-		byte[] data = baos.toByteArray();
-		if (data.length > 1428) {
-			throw new IllegalArgumentException("Cannot write more than 1428 bytes of data (got "+data.length+" bytes)");
+		write(data, baos);
+		byte[] bys = baos.toByteArray();
+		if (bys.length > 1428) {
+			throw new IllegalArgumentException("Cannot write more than 1428 bytes of data (got "+bys.length+" bytes)");
 		}
 		BigInteger _7F = BigInteger.valueOf(0x7F);
-		BigInteger bi = new BigInteger(1, data);
+		BigInteger bi = new BigInteger(1, bys);
 		int written = 0;
-		for (EarsCommon.Rectangle rect : ENCODE_REGIONS) {
+		for (Rectangle rect : ENCODE_REGIONS) {
 			for (int x = rect.x1; x < rect.x2; x++) {
 				for (int y = rect.y1; y < rect.y2; y++) {
 					int argb = img.getARGB(x, y);
@@ -240,13 +200,13 @@ public class Alfalfa {
 		}
 	}
 	
-	public static Alfalfa read(ByteArrayInputStream in) throws IOException {
+	public static AlfalfaData read(ByteArrayInputStream in) throws IOException {
 		return read((InputStream)in);
 	}
 	
-	public void write(ByteArrayOutputStream out) {
+	public static void write(AlfalfaData data, ByteArrayOutputStream out) {
 		try {
-			write((OutputStream)out);
+			write(data, (OutputStream)out);
 		} catch (IOException e) {
 			throw new AssertionError(e);
 		}

@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.AlfalfaData;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.EarMode;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.TailMode;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.WingMode;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.util.BitOutputStream;
 
 public class EarsFeaturesWriterV1 {
@@ -15,7 +20,7 @@ public class EarsFeaturesWriterV1 {
 		BitOutputStream bos = new BitOutputStream(os);
 		bos.write(8, 0); // version
 		int ears;
-		if (feat.earMode == EarsFeatures.EarMode.NONE) {
+		if (feat.earMode == EarMode.NONE) {
 			ears = 0;
 		} else {
 			ears = ((feat.earMode.ordinal()-1)*3)+(feat.earAnchor.ordinal())+1;
@@ -24,7 +29,7 @@ public class EarsFeaturesWriterV1 {
 		bos.write(feat.claws);
 		bos.write(feat.horn);
 		bos.write(3, feat.tailMode.ordinal());
-		if (feat.tailMode != EarsFeatures.TailMode.NONE) {
+		if (feat.tailMode != TailMode.NONE) {
 			bos.write(2, feat.tailSegments-1);
 			bos.writeSAMUnit(6, feat.tailBend0/90);
 			if (feat.tailSegments > 1) bos.writeSAMUnit(6, feat.tailBend1/90);
@@ -41,10 +46,11 @@ public class EarsFeaturesWriterV1 {
 		}
 		bos.writeUnit(5, feat.chestSize);
 		bos.write(3, feat.wingMode.ordinal());
-		if (feat.wingMode != EarsFeatures.WingMode.NONE) {
+		if (feat.wingMode != WingMode.NONE) {
 			bos.write(feat.animateWings);
 		}
 		bos.write(feat.capeEnabled);
+		bos.write(feat.emissive);
 		bos.flush();
 	}
 	
@@ -68,9 +74,9 @@ public class EarsFeaturesWriterV1 {
 			}
 		}
 		if (feat.alfalfa != null) {
-			feat.alfalfa.write(img);
+			Alfalfa.write(feat.alfalfa, img);
 		} else {
-			Alfalfa.NONE.write(img);
+			Alfalfa.write(AlfalfaData.NONE, img);
 		}
 	}
 	

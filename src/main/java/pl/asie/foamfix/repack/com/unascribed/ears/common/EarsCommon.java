@@ -7,13 +7,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import pl.asie.foamfix.repack.com.unascribed.ears.api.Slice;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.AlfalfaData;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures;
+import pl.asie.foamfix.repack.com.unascribed.ears.api.features.EarsFeatures.WingMode;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.debug.EarsLog;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.render.EarsRenderDelegate;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.render.EarsRenderDelegate.TexFlip;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.render.EarsRenderDelegate.TexRotation;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.render.EarsRenderDelegate.TexSource;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.util.BitInputStream;
-import pl.asie.foamfix.repack.com.unascribed.ears.common.util.Slice;
 
 /**
  * Entrypoint to methods that are common to all ports of Ears.
@@ -75,7 +78,7 @@ public class EarsCommon {
 	 * which we give a use to.
 	 */
 	public static void carefullyStripAlpha(StripAlphaMethod sam, boolean sixtyFour) {
-		EarsLog.debug("Common", "carefullyStripAlpha({}, {})", sam, sixtyFour);
+		EarsLog.debug(EarsLog.Tag.COMMON, "carefullyStripAlpha({}, {})", sam, sixtyFour);
 		for (Rectangle rect : FORCED_OPAQUE_REGIONS) {
 			if (!sixtyFour && rect.y1 > 32) continue;
 			sam.stripAlpha(rect.x1, rect.y1, rect.x2, rect.y2);
@@ -91,19 +94,19 @@ public class EarsCommon {
 	}
 	
 	public static boolean shouldSuppressElytra(EarsFeatures features) {
-		return features != null && features.animateWings && features.wingMode != EarsFeatures.WingMode.NONE;
+		return features != null && features.animateWings && features.wingMode != WingMode.NONE;
 	}
 	
 	public static String getConfigPreviewUrl() {
-		return "https://unascribed.com/ears/";
+		return "https://ears.unascribed.com/manipulator/";
 	}
 	
 	public static String getConfigUrl(String username, String uuid) {
-		return "https://unascribed.com/ears/#v="+EarsVersion.COMMON+(uuid == null ? ",username="+username : ",id="+uuid);
+		return "https://ears.unascribed.com/manipulator/#v="+EarsVersion.COMMON+(uuid == null ? ",username="+username : ",id="+uuid);
 	}
 	
-	public static Alfalfa preprocessSkin(WritableEarsImage img) {
-		Alfalfa a = Alfalfa.read(img);
+	public static AlfalfaData preprocessSkin(WritableEarsImage img) {
+		AlfalfaData a = Alfalfa.read(img);
 		Slice erase = a.data.get("erase");
 		if (erase != null) {
 			BitInputStream bis = new BitInputStream(new ByteArrayInputStream(erase.toByteArray()));
@@ -119,14 +122,15 @@ public class EarsCommon {
 							img.setARGB(xi, yi, 0);
 						}
 					}
+					count++;
 				}
 			} catch (EOFException e) {
 			} catch (IOException e) {
-				EarsLog.debug("Common:Features", "Exception while parsing eraser data", e);
+				EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Exception while parsing eraser data", e);
 			}
-			EarsLog.debug("Common:Features", "Discovered and applied {} eraser rectangle{}", count, count == 1 ? "" : "s");
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Discovered and applied {} eraser rectangle{}", count, count == 1 ? "" : "s");
 		} else {
-			EarsLog.debug("Common:Features", "Discovered no eraser data");
+			EarsLog.debug(EarsLog.Tag.COMMON_FEATURES, "Discovered no eraser data");
 		}
 		return a;
 	}
@@ -151,9 +155,9 @@ public class EarsCommon {
 	 * texture, "pinching" the UVs in by the specified amount to avoid UV bleed.
 	 */
 	public static float[][] calculateUVs(int u, int v, int w, int h, TexRotation rot, TexFlip flip, TexSource src, float pinch) {
-		EarsLog.debug("Common:Renderer", "calculateUVs(u={}, v={}, w={}, h={}, rot={}, flip={}, src={})", u, v, w, h, rot, flip, src);
-		float tw = src.width;
-		float th = src.height;
+		EarsLog.debug(EarsLog.Tag.COMMON_RENDERER, "calculateUVs(u={}, v={}, w={}, h={}, rot={}, flip={}, src={})", u, v, w, h, rot, flip, src);
+		float tw = src.getWidth();
+		float th = src.getHeight();
 		
 		float minU = (u/tw)+pinch;
 		float minV = (v/th)+pinch;
