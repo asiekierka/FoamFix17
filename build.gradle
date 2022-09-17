@@ -17,13 +17,11 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
-        classpath "gradle.plugin.net.minecrell:licenser:0.3"
+        classpath 'com.github.GTNewHorizons:ForgeGradle:1.2.7'
     }
 }
 
 apply plugin: 'forge'
-apply plugin: "net.minecrell.licenser"
 
 // define the properties file
 ext.configFile = file "build.properties"
@@ -47,6 +45,13 @@ archivesBaseName = "${config.mod_id}-${config.minecraft_version}"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    maven {
+        name 'Overmind forge repo mirror'
+        url 'https://gregtech.overminddl1.com/'
+    }
+}
 
 minecraft {
     version = config.minecraft_version + "-" + config.forge_version
@@ -80,13 +85,13 @@ processResources {
     }
 }
 
-license {
+/* license {
     sourceSets = [project.sourceSets.main]
     header = project.file("docs/LICENSE")
     ignoreFailures = true
-    exclude '**/*.info'
-    exclude '**/*.mcmeta'
-}
+    exclude '***.info'
+    exclude '***.mcmeta'
+} */
 
 sourceSets {
     main {
