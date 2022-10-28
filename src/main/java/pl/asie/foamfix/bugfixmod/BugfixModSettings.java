@@ -41,6 +41,7 @@ public class BugfixModSettings {
     public boolean bfEntityHeldItemNBTRenderFixEnabled;
     public boolean bfAlphaPassTessellatorCrashFixEnabled;
     public boolean bfLog4JExploitFixEnabled;
+    public boolean bfBiblioRCEFixEnabled;
 
     public boolean clOpenUrlLinux;
 

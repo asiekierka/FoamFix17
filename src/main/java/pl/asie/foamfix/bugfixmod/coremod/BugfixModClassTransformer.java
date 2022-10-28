@@ -42,7 +42,11 @@ import pl.asie.foamfix.bugfixmod.coremod.patchers.VillageAnvilTweakPatcher;
 import pl.asie.foamfix.forkage.coremod.patchers.*;
 import pl.asie.foamfix.repack.com.unascribed.ears.common.agent.EarsAgent;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,6 +66,16 @@ public class BugfixModClassTransformer implements IClassTransformer {
     private ArrayList<AbstractPatcher> globalPatchers = new ArrayList<>();
     private Map<String, ArrayList<AbstractPatcher>> patchers;
     public Logger logger = LogManager.getLogger("foamfix");
+
+    private static final int JNDILOOKUP_MOJANG_SIZE = 738;
+    private static final byte[] JNDILOOKUP_MOJANG_SHA256 = new byte[] {-56, -115, 104, -45, -32, -128, 26, -73, -90, -95, 22, -31, -108, -95, 110, 43, 88, -91, -16, 99, -36, 29, 79, -76, -21, -37, -43, 26, 5, -84, 78, -40};
+
+    private static final int JNDILOOKUP_MULTIMC_SIZE = 983;
+    private static final byte[] JNDILOOKUP_MULTIMC_SHA256 = new byte[] {
+            (byte)0x38,(byte)0xcb,(byte)0x1c,(byte)0xa2,(byte)0xba,(byte)0xc0,(byte)0x1f,(byte)0x1f,(byte)0x1f,(byte)0xeb,
+            (byte)0xd1,(byte)0xad,(byte)0x1a,(byte)0x85,(byte)0x8c,(byte)0x70,(byte)0x18,(byte)0x59,(byte)0x19,(byte)0x41,
+            (byte)0xfb,(byte)0x95,(byte)0x03,(byte)0x2d,(byte)0x0e,(byte)0xc6,(byte)0x40,(byte)0x62,(byte)0x3f,(byte)0x27,(byte)0x42,(byte)0x83
+    };
 
     public BugfixModClassTransformer() {
         if (instance != null) {
@@ -145,6 +159,9 @@ public class BugfixModClassTransformer implements IClassTransformer {
             settings.bfLog4JExploitFixEnabled = config.get("bugfixes", "log4jExploitFix", true,
                     "Fix Log4j formatting exploit."
                     ).getBoolean(true);
+            settings.bfBiblioRCEFixEnabled = config.get("bugfixes", "biblioRceExploitFix", true,
+                    "Fix BiblioRCE exploit."
+            ).getBoolean(true);
 
             settings.mc18SkinSupport = config.get("tweaks", "mc18SkinSupport", true,
                     "Add support for Minecraft 1.8+ skins."
@@ -405,7 +422,66 @@ public class BugfixModClassTransformer implements IClassTransformer {
             }
 
             if (settings.bfLog4JExploitFixEnabled) {
-                addPatcher(new Log4JLoggerWrapperPatcher("Log4JExploitFix"));
+                // check if vulnerable class is present
+                boolean vulnerableJndiLookupFound = true;
+                InputStream jndiLookupStream = BugfixModClassTransformer.class.getClassLoader().getResourceAsStream("org/apache/logging/log4j/core/lookup/JndiLookup.class");
+                if (jndiLookupStream == null) {
+                    try {
+                        if (Class.forName("org.apache.logging.log4j.core.lookup.JndiLookup") == null) {
+                            vulnerableJndiLookupFound = false;
+                        }
+                    } catch (ClassNotFoundException e) {
+                        vulnerableJndiLookupFound = false;
+                    }
+                }
+                if (vulnerableJndiLookupFound) {
+                    if (jndiLookupStream != null) {
+                        try {
+                            byte[] buffer = new byte[8192];
+                            int readLen = 0;
+                            int readLenLocal = 1;
+                            while (readLenLocal > 0 && readLen < buffer.length) {
+                                readLenLocal = jndiLookupStream.read(buffer, readLen, 8192 - readLen);
+                                if (readLenLocal > 0) {
+                                    readLen += readLenLocal;
+                                }
+                            }
+                            byte[] expectedShaDigest = null;
+                            String expectedShaDigestSource = null;
+                            if (readLen == JNDILOOKUP_MULTIMC_SIZE) {
+                                expectedShaDigest = JNDILOOKUP_MULTIMC_SHA256;
+                                expectedShaDigestSource = "MultiMC-patched";
+                            } else if (readLen == JNDILOOKUP_MOJANG_SIZE) {
+                                expectedShaDigest = JNDILOOKUP_MOJANG_SHA256;
+                                expectedShaDigestSource = "Mojang-patched";
+                            }
+                            if (expectedShaDigest != null) {
+                                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                                digest.update(buffer, 0, readLen);
+                                byte[] jndiLookupSha = digest.digest();
+                                if (Arrays.equals(jndiLookupSha, expectedShaDigest)) {
+                                    logger.info(expectedShaDigestSource + " JndiLookup class detected; skipping Log4JExploitFix...");
+                                    vulnerableJndiLookupFound = false;
+                                }
+                            }
+                        } catch (Exception e) {
+                            try {
+                                jndiLookupStream.close();
+                            } catch (IOException ee) {
+                                // pass
+                            }
+                        }
+                    }
+                    if (vulnerableJndiLookupFound) {
+                        addPatcher(new Log4JLoggerWrapperPatcher("Log4JExploitFix"));
+                    }
+                } else {
+                    logger.info("Vulnerable JndiLookup class not found; skipping Log4JExploitFix...");
+                }
+            }
+
+            if (settings.bfBiblioRCEFixEnabled) {
+                addPatcher(new FileRCEPatcher("BiblioRCEFix", "jds/bibliocraft/FileUtil"));
             }
         }
     }

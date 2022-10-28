@@ -60,11 +60,14 @@ public abstract class AbstractPatcher {
         } else {
             AbstractInsnNode currentInstruction;
             Iterator<AbstractInsnNode> instructionSet = method.instructions.iterator();
-            while (instructionSet.hasNext()) {
-                currentInstruction = instructionSet.next();
-                if (this instanceof ModificationPatcher) {
+            if (this instanceof ModificationPatcher) {
+                while (instructionSet.hasNext()) {
+                    currentInstruction = instructionSet.next();
                     ((ModificationPatcher) this).modifyInsns(currentInstruction, instructionSet, method.instructions);
-                } else {
+                }
+            } else {
+                while (instructionSet.hasNext()) {
+                    currentInstruction = instructionSet.next();
                     InsnList toInject = buildNewInsns(currentInstruction, instructionSet);
                     if (toInject != null && toInject.size() > 0) {
                         method.instructions.insert(currentInstruction, toInject);
@@ -76,8 +79,10 @@ public abstract class AbstractPatcher {
 
     protected void patchClassNode(ClassNode classNode) {
         for (MethodNode method : classNode.methods) {
-            if (method.name.equals(targetMethodName) && (targetMethodDesc == null || method.desc.equals(targetMethodDesc))) {
-                printMessage("Found target method");
+            if ((targetMethodName == null || method.name.equals(targetMethodName)) && (targetMethodDesc == null || method.desc.equals(targetMethodDesc))) {
+                if (targetMethodName != null) {
+                    printMessage("Found target method");
+                }
                 patchMethodNode(method);
             }
         }
