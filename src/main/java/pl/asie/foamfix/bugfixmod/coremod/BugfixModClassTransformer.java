@@ -182,23 +182,8 @@ public class BugfixModClassTransformer implements IClassTransformer {
             hasInit = true;
 
             if (settings.mc18SkinSupport) {
-                try {
-                    Class c = Class.forName("com.unascribed.ears.Ears");
-                    settings.helloMmcg = false;
-                } catch (Throwable t) {
-                    settings.helloMmcg = true;
-                }
-            } else {
-                settings.helloMmcg = false;
-            }
-
-            if (settings.helloMmcg) {
-                try {
-                    Class c = Class.forName("api.player.render.RenderPlayerAPI");
-                    settings.helloMmcg = false;
-                } catch (Throwable t) {
-                    // pass
-                }
+                settings.helloMmcg = BugfixModClassTransformer.class.getResource("/com/unascribed/ears/Ears.class") == null
+                        && BugfixModClassTransformer.class.getResource("/api/player/render/RenderPlayerAPI.class") == null;
             }
         }
     }
