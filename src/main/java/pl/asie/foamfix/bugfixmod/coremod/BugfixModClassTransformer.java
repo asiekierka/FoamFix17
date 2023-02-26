@@ -180,29 +180,35 @@ public class BugfixModClassTransformer implements IClassTransformer {
             MappingRegistry.init(isObf);
             setupPatchers();
             hasInit = true;
+        }
+    }
 
+    private Boolean applyEarsPatch;
+
+    public boolean applyEarsPatch() {
+        if (applyEarsPatch == null) {
             if (settings.mc18SkinSupport) {
                 try {
                     Class c = Class.forName("com.unascribed.ears.Ears");
-                    settings.helloMmcg = false;
+                    applyEarsPatch = false;
                 } catch (Throwable t) {
-                    settings.helloMmcg = true;
+                    applyEarsPatch = true;
                 }
             } else {
-                settings.helloMmcg = false;
+                applyEarsPatch = false;
             }
 
-            if (settings.helloMmcg) {
+            if (applyEarsPatch) {
                 try {
                     Class c = Class.forName("api.player.render.RenderPlayerAPI");
-                    settings.helloMmcg = false;
+                    applyEarsPatch = false;
                 } catch (Throwable t) {
                     // pass
                 }
             }
         }
+        return applyEarsPatch;
     }
-
 
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (hasInit) {
@@ -217,8 +223,15 @@ public class BugfixModClassTransformer implements IClassTransformer {
                 }
             }
 
-            if (settings.helloMmcg) {
-                bytes = EarsAgent.transform(transformedName, bytes);
+            if (applyEarsPatch == null) {
+                byte[] earsBytes = EarsAgent.transform(transformedName, bytes);
+                if (earsBytes != bytes) {
+                    if (applyEarsPatch()) {
+                        bytes = earsBytes;
+                    }
+                }
+            } else if (applyEarsPatch) {
+                bytes = EarsAgent.transform(transformedName, bytes);;
             }
         }
         return bytes;

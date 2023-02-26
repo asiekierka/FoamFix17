@@ -77,7 +77,7 @@ public class FoamFixMod {
                 }
             }
 
-            if (BugfixModClassTransformer.instance.settings.helloMmcg) {
+            if (BugfixModClassTransformer.instance.applyEarsPatch()) {
                 try {
                     Class c = Class.forName("pl.asie.foamfix.repack.com.unascribed.ears.Ears");
                     Object o = c.newInstance();

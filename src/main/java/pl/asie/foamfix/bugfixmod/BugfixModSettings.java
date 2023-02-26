@@ -50,8 +50,6 @@ public class BugfixModSettings {
     public boolean lwWeakenResourceCache;
     public boolean lwRemovePackageManifestMap;
 
-    public boolean helloMmcg;
-
     // Mod
     public boolean ArrowDingTweakEnabled;
     public boolean ToolDesyncFixEnabled;
