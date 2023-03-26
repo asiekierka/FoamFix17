@@ -57,9 +57,6 @@ public class FoamFixMod {
     public void preinit(FMLPreInitializationEvent evt) {
         logger = evt.getModLog();
 
-        System.out.println( System.getProperty("sun.boot.class.path"));
-        System.out.println(Arrays.toString(((URLClassLoader) ClassLoader.getSystemClassLoader()).getURLs()));
-
         if (BugfixModClassTransformer.instance.settings.ArrowDingTweakEnabled) {
             ArrowDingTweakEventHandler handler = new ArrowDingTweakEventHandler();
             FMLCommonHandler.instance().bus().register(handler);

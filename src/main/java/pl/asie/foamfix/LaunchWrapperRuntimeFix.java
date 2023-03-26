@@ -41,6 +41,8 @@ public final class LaunchWrapperRuntimeFix {
     }
 
     public static void weakenResourceCache() {
+        if (!(LaunchWrapperRuntimeFix.class.getClassLoader() instanceof LaunchClassLoader)) return;
+
         try {
             LaunchClassLoader loader = (LaunchClassLoader) LaunchWrapperRuntimeFix.class.getClassLoader();
 
@@ -55,6 +57,8 @@ public final class LaunchWrapperRuntimeFix {
     }
 
     public static void removePackageManifestMap() {
+        if (!(LaunchWrapperRuntimeFix.class.getClassLoader() instanceof LaunchClassLoader)) return;
+
         try {
             LaunchClassLoader loader = (LaunchClassLoader) LaunchWrapperRuntimeFix.class.getClassLoader();
 
