@@ -30,6 +30,7 @@ import pl.asie.foamfix.bugfixmod.coremod.BugfixModClassTransformer;
 import java.io.File;
 import java.util.Map;
 
+@IFMLLoadingPlugin.MCVersion("1.7.10")
 @IFMLLoadingPlugin.Name("FoamFix/1.7 (Do not report to Forge!)")
 @IFMLLoadingPlugin.SortingIndex(1001)
 @IFMLLoadingPlugin.TransformerExclusions({"pl.asie.foamfix"})
